@@ -1,100 +1,207 @@
-from flask import Flask, request
-from flask_restx import Api, Resource, fields
-import database
+# api.py
+# Flask API for managing student records using SQLite
+
+from flask import Flask, request, jsonify
+from flasgger import Swagger
+from database import get_db_connection, init_db
 
 app = Flask(__name__)
 
-# Swagger API initialization
-api = Api(
-    app,
-    version='1.0',
-    title='Student Database API',
-    description='API for managing student records using SQLite'
-)
+# Enable Swagger Documentation
+swagger = Swagger(app)
 
-ns = api.namespace('students', description='Student operations')
-
-# Create database table when server starts
-database.create_table()
+# Initialize database tables
+init_db()
 
 
-# -----------------------
-# Swagger Data Model
-# -----------------------
-student_model = api.model('Student', {
-    'name': fields.String(required=True, description='Student name'),
-    'age': fields.Integer(required=True, description='Student age'),
-    'major': fields.String(required=True, description='Student major')
-})
+@app.route("/")
+def home():
+    """
+    API Home
+    ---
+    responses:
+      200:
+        description: API is running
+    """
+    return {"message": "Student Records API Running"}
 
 
-# -----------------------
-# GET all students
-# -----------------------
-@ns.route('/')
-class StudentList(Resource):
+# ------------------------------
+# GET ALL STUDENTS
+# ------------------------------
+@app.route("/students", methods=["GET"])
+def get_students():
+    """
+    Get all students
+    ---
+    responses:
+      200:
+        description: List of students
+    """
+    try:
 
-    @ns.doc('list_students')
-    def get(self):
-        """Retrieve all students"""
-        return database.get_students()
+        conn = get_db_connection()
+        students = conn.execute("SELECT * FROM students").fetchall()
+        conn.close()
 
-    @ns.expect(student_model)
-    @ns.doc('create_student')
-    def post(self):
-        """Add a new student"""
+        return jsonify([dict(student) for student in students])
 
-        data = request.json
-        database.insert_student(
-            data['name'],
-            data['age'],
-            data['major']
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
+# ------------------------------
+# ADD STUDENT
+# ------------------------------
+@app.route("/students", methods=["POST"])
+def add_student():
+    """
+    Add a new student
+    ---
+    parameters:
+      - name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+            age:
+              type: integer
+            department_id:
+              type: integer
+    responses:
+      201:
+        description: Student added
+    """
+
+    try:
+
+        data = request.get_json()
+
+        name = data["name"]
+        age = data["age"]
+        department_id = data["department_id"]
+
+        conn = get_db_connection()
+
+        conn.execute(
+            "INSERT INTO students (name, age, department_id) VALUES (?, ?, ?)",
+            (name, age, department_id),
         )
+
+        conn.commit()
+        conn.close()
 
         return {"message": "Student added successfully"}, 201
 
+    except Exception as e:
+        return {"error": str(e)}, 500
 
-# -----------------------
-# Update / Delete student
-# -----------------------
-@ns.route('/<int:id>')
-class Student(Resource):
 
-    @ns.expect(student_model)
-    @ns.doc('update_student')
-    def put(self, id):
-        """Update a student"""
+# ------------------------------
+# UPDATE STUDENT
+# ------------------------------
+@app.route("/students/<int:id>", methods=["PUT"])
+def update_student(id):
+    """
+    Update a student
+    ---
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+    """
 
-        data = request.json
-        database.update_student(
-            id,
-            data['name'],
-            data['age'],
-            data['major']
+    try:
+
+        data = request.get_json()
+
+        name = data["name"]
+        age = data["age"]
+
+        conn = get_db_connection()
+
+        conn.execute(
+            "UPDATE students SET name = ?, age = ? WHERE id = ?",
+            (name, age, id),
         )
 
-        return {"message": "Student updated"}
+        conn.commit()
+        conn.close()
 
-    @ns.doc('delete_student')
-    def delete(self, id):
-        """Delete a student"""
+        return {"message": "Student updated successfully"}
 
-        database.delete_student(id)
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
+# ------------------------------
+# DELETE STUDENT
+# ------------------------------
+@app.route("/students/<int:id>", methods=["DELETE"])
+def delete_student(id):
+    """
+    Delete a student
+    ---
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+    """
+
+    try:
+
+        conn = get_db_connection()
+
+        conn.execute("DELETE FROM students WHERE id = ?", (id,))
+
+        conn.commit()
+        conn.close()
 
         return {"message": "Student deleted"}
 
+    except Exception as e:
+        return {"error": str(e)}, 500
 
-# -----------------------
-# Aggregate Statistics
-# -----------------------
-@ns.route('/stats')
-class StudentStats(Resource):
 
-    @ns.doc('student_statistics')
-    def get(self):
-        """Return total students and average age"""
+# ------------------------------
+# JOIN QUERY (ADVANCED SQL)
+# ------------------------------
+@app.route("/students-with-department", methods=["GET"])
+def students_with_department():
+    """
+    Get students with department names (JOIN)
+    ---
+    responses:
+      200:
+        description: Students with departments
+    """
 
-        return database.get_student_statistics()
+    try:
+
+        conn = get_db_connection()
+
+        students = conn.execute(
+            """
+            SELECT students.id,
+                   students.name,
+                   students.age,
+                   departments.name AS department
+            FROM students
+            JOIN departments
+            ON students.department_id = departments.id
+            """
+        ).fetchall()
+
+        conn.close()
+
+        return jsonify([dict(student) for student in students])
+
+    except Exception as e:
+        return {"error": str(e)}, 500
 
 
 if __name__ == "__main__":

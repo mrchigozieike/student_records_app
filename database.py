@@ -1,140 +1,54 @@
+# database.py
+# Handles SQLite database connection and setup
+
 import sqlite3
 
 DATABASE = "students.db"
 
 
-def get_connection():
+def get_db_connection():
     """
-    Create and return a connection to the SQLite database.
+    Create and return a database connection
     """
     conn = sqlite3.connect(DATABASE)
+
+    # Allows accessing columns by name
     conn.row_factory = sqlite3.Row
+
     return conn
 
 
-def create_table():
+def init_db():
     """
-    Create the students table if it does not already exist.
+    Create database tables if they do not exist
     """
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
 
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS students (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            age INTEGER,
-            major TEXT
-        )
-        """)
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-        conn.commit()
-        conn.close()
+    # Create Departments table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS departments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL
+    )
+    """)
 
-    except sqlite3.Error as e:
-        print("Database error:", e)
+    # Create Students table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS students (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        age INTEGER,
+        department_id INTEGER,
+        FOREIGN KEY (department_id) REFERENCES departments (id)
+    )
+    """)
 
+    # Insert sample departments
+    cursor.execute("INSERT OR IGNORE INTO departments (id, name) VALUES (1, 'Software Development')")
+    cursor.execute("INSERT OR IGNORE INTO departments (id, name) VALUES (2, 'Computer Science')")
+    cursor.execute("INSERT OR IGNORE INTO departments (id, name) VALUES (3, 'Information Technology')")
 
-def insert_student(name, age, major):
-    """
-    Insert a new student into the database.
-    """
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute(
-            "INSERT INTO students (name, age, major) VALUES (?, ?, ?)",
-            (name, age, major)
-        )
-
-        conn.commit()
-        conn.close()
-
-    except sqlite3.Error as e:
-        print("Insert error:", e)
-
-
-def get_students():
-    """
-    Retrieve all students from the database.
-    """
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("SELECT * FROM students")
-
-        students = cursor.fetchall()
-
-        conn.close()
-
-        return [dict(row) for row in students]
-
-    except sqlite3.Error as e:
-        print("Query error:", e)
-        return []
-
-
-def update_student(student_id, name, age, major):
-    """
-    Update student information.
-    """
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute(
-            "UPDATE students SET name=?, age=?, major=? WHERE id=?",
-            (name, age, major, student_id)
-        )
-
-        conn.commit()
-        conn.close()
-
-    except sqlite3.Error as e:
-        print("Update error:", e)
-
-
-def delete_student(student_id):
-    """
-    Delete a student from the database.
-    """
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("DELETE FROM students WHERE id=?", (student_id,))
-
-        conn.commit()
-        conn.close()
-
-    except sqlite3.Error as e:
-        print("Delete error:", e)
-
-
-def get_student_statistics():
-    """
-    Return statistics using SQL aggregate functions.
-    """
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-        SELECT 
-            COUNT(*) AS total_students,
-            AVG(age) AS average_age
-        FROM students
-        """)
-
-        stats = cursor.fetchone()
-
-        conn.close()
-
-        return dict(stats)
-
-    except sqlite3.Error as e:
-        print("Statistics error:", e)
-        return None
+    conn.commit()
+    conn.close()

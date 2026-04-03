@@ -1,70 +1,140 @@
-# Import sqlite3 which allows Python to interact with SQLite databases
 import sqlite3
 
+DATABASE = "students.db"
 
-# -----------------------------
-# FUNCTION: Connect to database
-# -----------------------------
-# Creates a connection to the students database file
-def connect_db():
 
-    # Connect to the database file
-    conn = sqlite3.connect("students.db")
-
-    # Configure row factory to return results as dictionaries
+def get_connection():
+    """
+    Create and return a connection to the SQLite database.
+    """
+    conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
-
     return conn
 
 
-# -----------------------------
-# FUNCTION: Get all students
-# -----------------------------
-# Retrieves every student record stored in the database
+def create_table():
+    """
+    Create the students table if it does not already exist.
+    """
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS students (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            age INTEGER,
+            major TEXT
+        )
+        """)
+
+        conn.commit()
+        conn.close()
+
+    except sqlite3.Error as e:
+        print("Database error:", e)
+
+
+def insert_student(name, age, major):
+    """
+    Insert a new student into the database.
+    """
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "INSERT INTO students (name, age, major) VALUES (?, ?, ?)",
+            (name, age, major)
+        )
+
+        conn.commit()
+        conn.close()
+
+    except sqlite3.Error as e:
+        print("Insert error:", e)
+
+
 def get_students():
+    """
+    Retrieve all students from the database.
+    """
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
-    # Connect to the database
-    conn = connect_db()
+        cursor.execute("SELECT * FROM students")
 
-    # Create a cursor to execute SQL commands
-    cursor = conn.cursor()
+        students = cursor.fetchall()
 
-    # Execute SQL query to retrieve all students
-    cursor.execute("SELECT * FROM students")
+        conn.close()
 
-    # Fetch all rows returned by the query
-    rows = cursor.fetchall()
+        return [dict(row) for row in students]
 
-    # Convert rows into dictionary format
-    students = [dict(row) for row in rows]
-
-    # Close database connection
-    conn.close()
-
-    # Return student list
-    return students
+    except sqlite3.Error as e:
+        print("Query error:", e)
+        return []
 
 
-# -----------------------------
-# FUNCTION: Add a new student
-# -----------------------------
-# Inserts a new student record into the database
-def add_student(name, age, major):
+def update_student(student_id, name, age, major):
+    """
+    Update student information.
+    """
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
-    # Connect to the database
-    conn = connect_db()
+        cursor.execute(
+            "UPDATE students SET name=?, age=?, major=? WHERE id=?",
+            (name, age, major, student_id)
+        )
 
-    # Create a cursor to execute SQL commands
-    cursor = conn.cursor()
+        conn.commit()
+        conn.close()
 
-    # SQL query to insert student data
-    cursor.execute(
-        "INSERT INTO students (name, age, major) VALUES (?, ?, ?)",
-        (name, age, major)
-    )
+    except sqlite3.Error as e:
+        print("Update error:", e)
 
-    # Save the changes to the database
-    conn.commit()
 
-    # Close the database connection
-    conn.close()
+def delete_student(student_id):
+    """
+    Delete a student from the database.
+    """
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("DELETE FROM students WHERE id=?", (student_id,))
+
+        conn.commit()
+        conn.close()
+
+    except sqlite3.Error as e:
+        print("Delete error:", e)
+
+
+def get_student_statistics():
+    """
+    Return statistics using SQL aggregate functions.
+    """
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+        SELECT 
+            COUNT(*) AS total_students,
+            AVG(age) AS average_age
+        FROM students
+        """)
+
+        stats = cursor.fetchone()
+
+        conn.close()
+
+        return dict(stats)
+
+    except sqlite3.Error as e:
+        print("Statistics error:", e)
+        return None

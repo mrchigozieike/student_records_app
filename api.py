@@ -1,72 +1,101 @@
-# Import the Flask framework used to create the web API
-from flask import Flask, jsonify, request
+from flask import Flask, request
+from flask_restx import Api, Resource, fields
+import database
 
-# Import functions from database.py to interact with the database
-from database import get_students, add_student
-
-# Create the Flask application instance
 app = Flask(__name__)
 
-# -----------------------------
-# ROUTE: Home
-# -----------------------------
-# This route runs when someone visits the base URL of the API
-# Example: https://your-api-url.onrender.com/
-@app.route("/")
-def home():
-    return jsonify({"message": "Student API is running"})
+# Swagger API initialization
+api = Api(
+    app,
+    version='1.0',
+    title='Student Database API',
+    description='API for managing student records using SQLite'
+)
+
+ns = api.namespace('students', description='Student operations')
+
+# Create database table when server starts
+database.create_table()
 
 
-# -----------------------------
-# ROUTE: Get all students
-# -----------------------------
-# This route retrieves all student records from the database
-# Example request:
-# GET /students
-@app.route("/students", methods=["GET"])
-def students():
-    
-    # Call function from database.py to retrieve student data
-    students = get_students()
-    
-    # Return the students as JSON
-    return jsonify(students)
+# -----------------------
+# Swagger Data Model
+# -----------------------
+student_model = api.model('Student', {
+    'name': fields.String(required=True, description='Student name'),
+    'age': fields.Integer(required=True, description='Student age'),
+    'major': fields.String(required=True, description='Student major')
+})
 
 
-# -----------------------------
-# ROUTE: Add a new student
-# -----------------------------
-# This route allows users to add a student to the database
-# Example request:
-# POST /students
-# JSON body:
-# {
-#   "name": "John Doe",
-#   "age": 21,
-#   "major": "Computer Science"
-# }
-@app.route("/students", methods=["POST"])
-def add():
+# -----------------------
+# GET all students
+# -----------------------
+@ns.route('/')
+class StudentList(Resource):
 
-    # Get JSON data sent in the request body
-    data = request.json
+    @ns.doc('list_students')
+    def get(self):
+        """Retrieve all students"""
+        return database.get_students()
 
-    # Extract fields from the request
-    name = data.get("name")
-    age = data.get("age")
-    major = data.get("major")
+    @ns.expect(student_model)
+    @ns.doc('create_student')
+    def post(self):
+        """Add a new student"""
 
-    # Add the student to the database
-    add_student(name, age, major)
+        data = request.json
+        database.insert_student(
+            data['name'],
+            data['age'],
+            data['major']
+        )
 
-    # Return confirmation message
-    return jsonify({"message": "Student added successfully"})
+        return {"message": "Student added successfully"}, 201
 
 
-# -----------------------------
-# Run the Flask server
-# -----------------------------
-# This runs the application locally when executing api.py
-# Debug mode allows automatic reload when code changes
+# -----------------------
+# Update / Delete student
+# -----------------------
+@ns.route('/<int:id>')
+class Student(Resource):
+
+    @ns.expect(student_model)
+    @ns.doc('update_student')
+    def put(self, id):
+        """Update a student"""
+
+        data = request.json
+        database.update_student(
+            id,
+            data['name'],
+            data['age'],
+            data['major']
+        )
+
+        return {"message": "Student updated"}
+
+    @ns.doc('delete_student')
+    def delete(self, id):
+        """Delete a student"""
+
+        database.delete_student(id)
+
+        return {"message": "Student deleted"}
+
+
+# -----------------------
+# Aggregate Statistics
+# -----------------------
+@ns.route('/stats')
+class StudentStats(Resource):
+
+    @ns.doc('student_statistics')
+    def get(self):
+        """Return total students and average age"""
+
+        return database.get_student_statistics()
+
+
 if __name__ == "__main__":
     app.run(debug=True)

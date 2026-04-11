@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>🔍 Date/Time Filtering Demonstrations</h2>
+<p>This page demonstrates various date and time range filtering capabilities.</p>
+
+<div class="filter-grid">
+    <!-- Filter 1: Students by Enrollment Date Range -->
+    <div class="filter-card">
+        <h3>📅 Filter Students by Enrollment Date</h3>
+        <p>Find students who enrolled between two dates.</p>
+        <form action="/filter_students_by_date" method="POST">
+            <div class="form-group">
+                <label>Start Date:</label>
+                <input type="date" name="start_date" required>
+            </div>
+            <div class="form-group">
+                <label>End Date:</label>
+                <input type="date" name="end_date" required>
+            </div>
+            <button type="submit" class="btn">Filter Students</button>
+        </form>
+    </div>
+    
+    <!-- Filter 2: Enrollments by Date Range -->
+    <div class="filter-card">
+        <h3>📝 Filter Enrollments by Date</h3>
+        <p>Find enrollments made between two dates.</p>
+        <form action="/filter_enrollments_by_date" method="POST">
+            <div class="form-group">
+                <label>Start Date:</label>
+                <input type="date" name="start_date" required>
+            </div>
+            <div class="form-group">
+                <label>End Date:</label>
+                <input type="date" name="end_date" required>
+            </div>
+            <button type="submit" class="btn">Filter Enrollments</button>
+        </form>
+    </div>
+    
+    <!-- Filter 3: Recent Enrollments -->
+    <div class="filter-card">
+        <h3>🕒 Recent Enrollments</h3>
+        <p>Show enrollments from the last 7 days.</p>
+        <a href="/recent_enrollments" class="btn">View Recent Enrollments</a>
+    </div>
+    
+    <!-- Filter 4: Students by Birth Month -->
+    <div class="filter-card">
+        <h3>🎂 Students by Birth Month</h3>
+        <p>Find students born in a specific month.</p>
+        <form action="/birth_month_search" method="POST">
+            <div class="form-group">
+                <label>Month (1-12):</label>
+                <input type="number" name="month" min="1" max="12" required>
+            </div>
+            <button type="submit" class="btn">Search by Month</button>
+        </form>
+    </div>
+</div>
+
+<div class="filter-section" style="margin-top: 30px;">
+    <h3>📊 Date/Time Features Demonstrated:</h3>
+    <ul style="margin-top: 15px; margin-left: 20px;">
+        <li>✅ <strong>DATE columns</strong> - enrollment_date, birth_date, start_date, end_date</li>
+        <li>✅ <strong>DATETIME column</strong> - enrollment_date with auto timestamp</li>
+        <li>✅ <strong>BETWEEN date range filtering</strong> - Find records between two dates</li>
+        <li>✅ <strong>Relative date filtering</strong> - Last 7 days using datetime('now', '-7 days')</li>
+        <li>✅ <strong>Date extraction</strong> - Filter by birth month using strftime()</li>
+        <li>✅ <strong>Date comparisons</strong> - Using date() function to compare dates</li>
+    </ul>
+</div>
+{% endblock %}

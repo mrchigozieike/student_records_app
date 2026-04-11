@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Enroll Student in Course</h2>
+
+<form method="POST">
+    <div class="form-group">
+        <label>Student:</label>
+        <select name="student_id" required>
+            <option value="">Select Student</option>
+            {% for student in students %}
+            <option value="{{ student.student_id }}">{{ student.name }} (ID: {{ student.student_id }})</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label>Course:</label>
+        <select name="course_id" required>
+            <option value="">Select Course</option>
+            {% for course in courses %}
+            <option value="{{ course.course_id }}">{{ course.course_name }} (ID: {{ course.course_id }})</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label>Grade:</label>
+        <input type="number" name="grade" min="0" max="100" required>
+    </div>
+    
+    <button type="submit" class="btn">Enroll Student</button>
+    <a href="/enrollments" class="btn" style="background: #666;">Cancel</a>
+</form>
+{% endblock %}

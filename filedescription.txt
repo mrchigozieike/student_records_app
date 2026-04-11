@@ -1,0 +1,82 @@
+## Start the Application in the terminal cd student_records_app folder and enter the command 
+'python api.py'
+
+
+
+### File Descriptions
+
+| File | Description |
+|------|-------------|
+| `api.py` | Contains Flask routes for both web interface and REST API endpoints |
+| `database.py` | Handles database connection, table creation, and sample data insertion |
+| `student_records.py` | Core business logic with all SQL queries including date filtering |
+| `students.db` | SQLite relational database with DATE/DATETIME columns |
+| `templates/` | HTML templates for web interface (Jinja2) |
+| `requirements.txt` | Lists required Python packages |
+
+---
+
+## API Endpoints
+
+### Student Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/students` | Retrieve all students |
+| GET | `/api/students/<id>` | Retrieve specific student |
+| POST | `/api/students` | Add new student |
+| PUT | `/api/students/<id>` | Update student information |
+| DELETE | `/api/students/<id>` | Delete student |
+
+### Course Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/courses` | Retrieve all courses |
+| POST | `/api/courses` | Add new course |
+
+### Enrollment Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/enrollments` | Retrieve all enrollments |
+| POST | `/api/enrollments` | Enroll student in course |
+| PUT | `/api/enrollments/<id>/grade` | Update student's grade |
+
+### DATE/TIME Filtering Endpoints ⭐
+
+| Method | Endpoint | SQL Technique Demonstrated |
+|--------|----------|---------------------------|
+| GET | `/api/filter/students-by-date?start_date=&end_date=` | `BETWEEN` date range filter |
+| GET | `/api/filter/enrollments-by-date?start_date=&end_date=` | `date()` function with range |
+| GET | `/api/filter/recent-enrollments` | `datetime('now', '-7 days')` |
+| GET | `/api/filter/students-by-birth-month?month=` | `strftime()` date extraction |
+| GET | `/api/filter/courses-by-date?start_date=&end_date=` | Multi-column date filtering |
+
+### Web Interface Routes
+
+| Route | Description |
+|-------|-------------|
+| `/` | Home page with navigation |
+| `/students` | View and manage students |
+| `/courses` | View and manage courses |
+| `/enrollments` | View and manage enrollments |
+| `/filter` | Interactive date filtering page |
+
+### Utility Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/info` | API information and documentation |
+| POST | `/api/reset` | Reset database with sample data |
+
+---
+
+## How to Run the Program (Offline)
+
+### 1️⃣ Install Python
+
+Make sure Python 3.8+ is installed:
+
+```bash
+python --version

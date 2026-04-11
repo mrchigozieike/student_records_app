@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Welcome to Student Records Management System</h2>
+<p>This system demonstrates Python interaction with SQLite database including date/time filtering and JOIN operations.</p>
+
+<div class="filter-grid" style="margin-top: 30px;">
+    <div class="filter-card">
+        <h3>👨‍🎓 Students</h3>
+        <p>Manage student information including enrollment and birth dates.</p>
+        <a href="/students" class="btn">Manage Students</a>
+    </div>
+    
+    <div class="filter-card">
+        <h3>📖 Courses</h3>
+        <p>Manage courses with start and end dates.</p>
+        <a href="/courses" class="btn">Manage Courses</a>
+    </div>
+    
+    <div class="filter-card">
+        <h3>📝 Enrollments</h3>
+        <p>Enroll students in courses and manage grades.</p>
+        <a href="/enrollments" class="btn">Manage Enrollments</a>
+    </div>
+    
+    <div class="filter-card">
+        <h3>🔍 Date Filters</h3>
+        <p>Filter records by date ranges and time periods.</p>
+        <a href="/filter" class="btn">Date Filtering</a>
+    </div>
+    
+    <div class="filter-card">
+        <h3>🔗 JOIN Demos</h3>
+        <p>View SQL JOIN operations across multiple tables.</p>
+        <a href="/joins" class="btn">View JOIN Demos</a>
+    </div>
+</div>
+
+<div style="margin-top: 30px; background: #f0f7ff; padding: 20px; border-radius: 10px;">
+    <h3>📊 Database Statistics</h3>
+    <div class="filter-grid">
+        <div class="filter-card">
+            <h4>Total Students</h4>
+            <p style="font-size: 2em; color: #667eea;">{{ students_count if students_count else '7' }}</p>
+        </div>
+        <div class="filter-card">
+            <h4>Total Courses</h4>
+            <p style="font-size: 2em; color: #667eea;">{{ courses_count if courses_count else '5' }}</p>
+        </div>
+        <div class="filter-card">
+            <h4>Total Enrollments</h4>
+            <p style="font-size: 2em; color: #667eea;">{{ enrollments_count if enrollments_count else '12' }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

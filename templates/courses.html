@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+    <h2>📖 Course Management</h2>
+    <a href="/add_course" class="btn">+ Add New Course</a>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Course Name</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for course in courses %}
+        <tr>
+            <td>{{ course.course_id }}</td>
+            <td>{{ course.course_name }}</td>
+            <td>{{ course.start_date or 'N/A' }}</td>
+            <td>{{ course.end_date or 'N/A' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

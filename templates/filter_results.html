@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{{ title }}</h2>
+
+{% if results %}
+    {% if type == 'students' %}
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Major</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in results %}
+            <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.major or 'N/A' }}</td>
+                <td>{{ item.enrollment_date or item.birth_date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <table>
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Course</th>
+                <th>Date</th>
+                <th>Grade</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in results %}
+            <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.course_name }}</td>
+                <td>{{ item.enrollment_date }}</td>
+                <td>{{ item.grade or 'N/A' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+    
+    <p style="margin-top: 20px;">
+        <strong>Total Records:</strong> {{ results|length }}
+    </p>
+{% else %}
+    <p>No records found matching your criteria.</p>
+{% endif %}
+
+<p style="margin-top: 20px;">
+    <a href="/filter" class="btn">Back to Filters</a>
+</p>
+{% endblock %}

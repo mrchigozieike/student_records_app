@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Update Grade</h2>
+
+{% if enrollment %}
+<div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+    <p><strong>Student:</strong> {{ enrollment.student_name }}</p>
+    <p><strong>Course:</strong> {{ enrollment.course_name }}</p>
+    <p><strong>Current Grade:</strong> {{ enrollment.grade or 'Not graded' }}</p>
+</div>
+
+<form method="POST">
+    <div class="form-group">
+        <label>New Grade:</label>
+        <input type="number" name="grade" min="0" max="100" value="{{ enrollment.grade }}" required>
+    </div>
+    
+    <button type="submit" class="btn">Update Grade</button>
+    <a href="/enrollments" class="btn" style="background: #666;">Cancel</a>
+</form>
+{% else %}
+<p>Enrollment not found.</p>
+<a href="/enrollments" class="btn">Back to Enrollments</a>
+{% endif %}
+{% endblock %}

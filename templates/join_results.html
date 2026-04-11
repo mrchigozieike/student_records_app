@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{{ title }}</h2>
+<p><strong>JOIN Type:</strong> {{ join_type }}</p>
+
+{% if results %}
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background-color: #667eea; color: white;">
+                    {% for key in results[0].keys() %}
+                    <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">{{ key.replace('_', ' ').title() }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in results %}
+                <tr style="border-bottom: 1px solid #ddd;">
+                    {% for value in row.values() %}
+                    <td style="padding: 10px; border: 1px solid #ddd;">{{ value if value else 'N/A' }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p style="margin-top: 20px;"><strong>Total Records:</strong> {{ results|length }}</p>
+{% else %}
+    <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;">
+        <p>No records found matching your criteria.</p>
+    </div>
+{% endif %}
+
+<p style="margin-top: 20px;">
+    <a href="/joins" class="btn">← Back to JOIN Demos</a>
+</p>
+{% endblock %}

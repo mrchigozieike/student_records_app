@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>🔗 Database JOIN Demonstrations</h2>
+<p>This page demonstrates various SQL JOIN operations between multiple tables in the database.</p>
+
+<div class="filter-grid">
+    <div class="filter-card">
+        <h3>👨‍🎓 Students with Advisors</h3>
+        <p><strong>JOIN Type:</strong> INNER JOIN across 4 tables</p>
+        <p><strong>Tables:</strong> students → advising → professors → departments</p>
+        <p>Shows each student with their assigned academic advisor and department information.</p>
+        <a href="/joins/students-with-professors" class="btn">View Students & Advisors</a>
+    </div>
+    
+    <div class="filter-card">
+        <h3>📚 Courses with Professors</h3>
+        <p><strong>JOIN Type:</strong> LEFT JOIN across 3 tables</p>
+        <p><strong>Tables:</strong> courses → course_assignments → professors</p>
+        <p>Shows all courses and which professors are assigned to teach them (includes courses with no professor).</p>
+        <a href="/joins/courses-with-professors" class="btn">View Courses & Professors</a>
+    </div>
+    
+    <div class="filter-card">
+        <h3>📊 Department Statistics</h3>
+        <p><strong>JOIN Type:</strong> Complex JOIN with Aggregation</p>
+        <p><strong>Tables:</strong> departments → professors → courses → enrollments → students</p>
+        <p>Shows department metrics including professor count, student count, average salary, and average grades.</p>
+        <a href="/joins/department-statistics" class="btn">View Department Stats</a>
+    </div>
+</div>
+
+<div style="margin-top: 30px; background: #f0f7ff; padding: 20px; border-radius: 10px;">
+    <h3>📖 SQL JOIN Techniques Demonstrated:</h3>
+    <ul style="margin-top: 15px; margin-left: 20px;">
+        <li>✅ <strong>INNER JOIN</strong> - Students with their advisors (4 tables: students → advising → professors → departments)</li>
+        <li>✅ <strong>LEFT JOIN</strong> - Courses with assigned professors (includes courses without professors)</li>
+        <li>✅ <strong>Multiple JOINs</strong> - Combining 4+ tables in a single query</li>
+        <li>✅ <strong>JOIN with Aggregation</strong> - Using COUNT, AVG, and GROUP BY with JOINs</li>
+        <li>✅ <strong>Foreign Key Relationships</strong> - Maintaining referential integrity across tables</li>
+    </ul>
+</div>
+
+<div style="margin-top: 20px; background: #fff3e0; padding: 20px; border-radius: 10px;">
+    <h3>🔍 Test JOIN API Endpoints:</h3>
+    <pre style="background: white; padding: 10px; border-radius: 5px; overflow-x: auto;">
+# Students with advisors (4-table INNER JOIN)
+curl http://localhost:5000/api/joins/students-with-professors
+
+# Courses with professors (LEFT JOIN)
+curl http://localhost:5000/api/joins/courses-with-professors
+
+# Department statistics (Complex JOIN with aggregation)
+curl http://localhost:5000/api/joins/department-statistics
+    </pre>
+</div>
+{% endblock %}

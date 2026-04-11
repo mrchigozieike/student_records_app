@@ -1,219 +1,513 @@
-# Student Records Management System
-# CSE 310 – Applied Programming
-# This program demonstrates how Python interacts with a SQL relational database
-# using SQLite. The program allows the user to insert, update, delete,
-# and retrieve student data.
+# student_records.py
+# Core business logic for student records management
 
-import sqlite3
+from database import get_db_connection
+from datetime import datetime
 
-# Connect to database (creates it if it doesn't exist)
-conn = sqlite3.connect("students.db")
-cursor = conn.cursor()
+# ===================================================
+# STUDENT FUNCTIONS
+# ===================================================
 
+def add_student(name, major, enrollment_date, birth_date):
+    """Add a new student to the database"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("""
+            INSERT INTO students (name, major, enrollment_date, birth_date) 
+            VALUES (?, ?, ?, ?)
+        """, (name, major, enrollment_date, birth_date))
+        
+        student_id = cursor.lastrowid
+        conn.commit()
+        return {"success": True, "student_id": student_id, "message": "Student added successfully"}
+    except Exception as e:
+        return {"success": False, "message": f"Error: {e}"}
+    finally:
+        conn.close()
 
-# ---------------------------------------------------
-# Create database tables
-# ---------------------------------------------------
-def create_tables():
-    # Students table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS students (
-        student_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        major TEXT
-    )
-    """)
-
-    # Courses table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS courses (
-        course_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        course_name TEXT NOT NULL
-    )
-    """)
-
-    # Enrollment table (links students and courses)
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS enrollments (
-        enrollment_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        student_id INTEGER,
-        course_id INTEGER,
-        grade INTEGER,
-        FOREIGN KEY(student_id) REFERENCES students(student_id),
-        FOREIGN KEY(course_id) REFERENCES courses(course_id)
-    )
-    """)
-
-    conn.commit()
-
-
-# ---------------------------------------------------
-# Add new student
-# ---------------------------------------------------
-def add_student():
-    name = input("Enter student name: ")
-    major = input("Enter student major: ")
-
-    cursor.execute(
-        "INSERT INTO students (name, major) VALUES (?, ?)",
-        (name, major)
-    )
-
-    conn.commit()
-    print("Student added successfully.")
-
-
-# ---------------------------------------------------
-# Add course
-# ---------------------------------------------------
-def add_course():
-    course_name = input("Enter course name: ")
-
-    cursor.execute(
-        "INSERT INTO courses (course_name) VALUES (?)",
-        (course_name,)
-    )
-
-    conn.commit()
-    print("Course added successfully.")
-
-
-# ---------------------------------------------------
-# Enroll student in course
-# ---------------------------------------------------
-def enroll_student():
-    student_id = input("Enter student ID: ")
-    course_id = input("Enter course ID: ")
-    grade = input("Enter grade: ")
-
-    cursor.execute(
-        "INSERT INTO enrollments (student_id, course_id, grade) VALUES (?, ?, ?)",
-        (student_id, course_id, grade)
-    )
-
-    conn.commit()
-    print("Student enrolled successfully.")
-
-
-# ---------------------------------------------------
-# View students
-# ---------------------------------------------------
-def view_students():
-    cursor.execute("SELECT * FROM students")
-
+def get_all_students():
+    """Retrieve all students"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM students ORDER BY student_id")
     students = cursor.fetchall()
+    conn.close()
+    
+    return [dict(student) for student in students]
 
-    print("\nStudents:")
-    for student in students:
-        print(student)
+def get_student_by_id(student_id):
+    """Retrieve a specific student by ID"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM students WHERE student_id = ?", (student_id,))
+    student = cursor.fetchone()
+    conn.close()
+    
+    return dict(student) if student else None
 
+def update_student(student_id, name, major, enrollment_date, birth_date):
+    """Update student information"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("""
+            UPDATE students 
+            SET name = ?, major = ?, enrollment_date = ?, birth_date = ?
+            WHERE student_id = ?
+        """, (name, major, enrollment_date, birth_date, student_id))
+        
+        conn.commit()
+        return {"success": True, "message": "Student updated successfully"}
+    except Exception as e:
+        return {"success": False, "message": f"Error: {e}"}
+    finally:
+        conn.close()
 
-# ---------------------------------------------------
-# View courses
-# ---------------------------------------------------
-def view_courses():
-    cursor.execute("SELECT * FROM courses")
+def delete_student(student_id):
+    """Delete a student from the database"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("SELECT name FROM students WHERE student_id = ?", (student_id,))
+        student = cursor.fetchone()
+        
+        if not student:
+            return {"success": False, "message": "Student not found"}
+        
+        cursor.execute("DELETE FROM students WHERE student_id = ?", (student_id,))
+        conn.commit()
+        return {"success": True, "message": "Student deleted successfully"}
+    except Exception as e:
+        return {"success": False, "message": f"Error: {e}"}
+    finally:
+        conn.close()
 
+# ===================================================
+# COURSE FUNCTIONS
+# ===================================================
+
+def add_course(course_name, start_date, end_date):
+    """Add a new course"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("""
+            INSERT INTO courses (course_name, start_date, end_date) 
+            VALUES (?, ?, ?)
+        """, (course_name, start_date, end_date))
+        
+        course_id = cursor.lastrowid
+        conn.commit()
+        return {"success": True, "course_id": course_id, "message": "Course added successfully"}
+    except Exception as e:
+        return {"success": False, "message": f"Error: {e}"}
+    finally:
+        conn.close()
+
+def get_all_courses():
+    """Retrieve all courses"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM courses ORDER BY course_id")
     courses = cursor.fetchall()
+    conn.close()
+    
+    return [dict(course) for course in courses]
 
-    print("\nCourses:")
-    for course in courses:
-        print(course)
+# ===================================================
+# ENROLLMENT FUNCTIONS
+# ===================================================
 
+def enroll_student(student_id, course_id, grade):
+    """Enroll a student in a course"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("""
+            INSERT INTO enrollments (student_id, course_id, grade) 
+            VALUES (?, ?, ?)
+        """, (student_id, course_id, grade))
+        
+        enrollment_id = cursor.lastrowid
+        conn.commit()
+        return {"success": True, "enrollment_id": enrollment_id, "message": "Student enrolled successfully"}
+    except Exception as e:
+        return {"success": False, "message": f"Error: {e}"}
+    finally:
+        conn.close()
 
-# ---------------------------------------------------
-# View enrollments with JOIN
-# ---------------------------------------------------
-def view_enrollments():
+def get_all_enrollments():
+    """Retrieve all enrollments with student and course details"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
     cursor.execute("""
-    SELECT students.name, courses.course_name, enrollments.grade
-    FROM enrollments
-    JOIN students ON enrollments.student_id = students.student_id
-    JOIN courses ON enrollments.course_id = courses.course_id
+        SELECT e.enrollment_id, s.name as student_name, s.student_id,
+               c.course_name, c.course_id, e.grade, e.enrollment_date
+        FROM enrollments e
+        JOIN students s ON e.student_id = s.student_id
+        JOIN courses c ON e.course_id = c.course_id
+        ORDER BY e.enrollment_date DESC
     """)
+    
+    enrollments = cursor.fetchall()
+    conn.close()
+    
+    return [dict(enrollment) for enrollment in enrollments]
 
-    records = cursor.fetchall()
+def update_grade(enrollment_id, new_grade):
+    """Update a student's grade for a course"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("""
+            UPDATE enrollments 
+            SET grade = ? 
+            WHERE enrollment_id = ?
+        """, (new_grade, enrollment_id))
+        
+        conn.commit()
+        return {"success": True, "message": "Grade updated successfully"}
+    except Exception as e:
+        return {"success": False, "message": f"Error: {e}"}
+    finally:
+        conn.close()
 
-    print("\nStudent Enrollments:")
-    for record in records:
-        print(record)
+# ===================================================
+# DATE/TIME FILTERING FUNCTIONS
+# ===================================================
 
+def filter_students_by_date_range(start_date, end_date):
+    """Filter students by enrollment date range"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT student_id, name, major, enrollment_date, birth_date
+        FROM students 
+        WHERE enrollment_date BETWEEN ? AND ?
+        ORDER BY enrollment_date
+    """, (start_date, end_date))
+    
+    students = cursor.fetchall()
+    conn.close()
+    
+    return [dict(student) for student in students]
 
-# ---------------------------------------------------
-# Update grade
-# ---------------------------------------------------
-def update_grade():
-    enrollment_id = input("Enter enrollment ID: ")
-    new_grade = input("Enter new grade: ")
+def filter_enrollments_by_date_range(start_date, end_date):
+    """Filter enrollments by date range"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT e.enrollment_id, s.name as student_name, c.course_name, 
+               e.grade, e.enrollment_date
+        FROM enrollments e
+        JOIN students s ON e.student_id = s.student_id
+        JOIN courses c ON e.course_id = c.course_id
+        WHERE date(e.enrollment_date) BETWEEN ? AND ?
+        ORDER BY e.enrollment_date
+    """, (start_date, end_date))
+    
+    enrollments = cursor.fetchall()
+    conn.close()
+    
+    return [dict(enrollment) for enrollment in enrollments]
 
-    cursor.execute(
-        "UPDATE enrollments SET grade=? WHERE enrollment_id=?",
-        (new_grade, enrollment_id)
-    )
+def get_recent_enrollments():
+    """Get enrollments from the last 7 days"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT s.name as student_name, c.course_name, e.enrollment_date, e.grade
+        FROM enrollments e
+        JOIN students s ON e.student_id = s.student_id
+        JOIN courses c ON e.course_id = c.course_id
+        WHERE e.enrollment_date >= datetime('now', '-7 days')
+        ORDER BY e.enrollment_date DESC
+    """)
+    
+    enrollments = cursor.fetchall()
+    conn.close()
+    
+    return [dict(enrollment) for enrollment in enrollments]
 
-    conn.commit()
-    print("Grade updated successfully.")
+def get_students_by_birth_month(month):
+    """Get students born in a specific month"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT student_id, name, major, birth_date
+        FROM students
+        WHERE strftime('%m', birth_date) = ?
+        ORDER BY birth_date
+    """, (month.zfill(2),))
+    
+    students = cursor.fetchall()
+    conn.close()
+    
+    return [dict(student) for student in students]
 
+def get_courses_by_date_range(start_date, end_date):
+    """Get courses active within a date range"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT course_id, course_name, start_date, end_date
+        FROM courses
+        WHERE start_date >= ? AND end_date <= ?
+        ORDER BY start_date
+    """, (start_date, end_date))
+    
+    courses = cursor.fetchall()
+    conn.close()
+    
+    return [dict(course) for course in courses]
 
-# ---------------------------------------------------
-# Delete student
-# ---------------------------------------------------
-def delete_student():
-    student_id = input("Enter student ID to delete: ")
+# ===================================================
+# JOIN FUNCTIONS - Demonstrating Table Joins
+# ===================================================
 
-    cursor.execute(
-        "DELETE FROM students WHERE student_id=?",
-        (student_id,)
-    )
+def get_students_with_professors():
+    """JOIN between students and professors through advising table"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+    SELECT 
+        s.student_id,
+        s.name AS student_name,
+        s.major,
+        p.professor_id,
+        p.name AS professor_name,
+        p.email AS professor_email,
+        d.department_name,
+        a.start_date AS advising_start,
+        a.status
+    FROM students s
+    INNER JOIN advising a ON s.student_id = a.student_id
+    INNER JOIN professors p ON a.professor_id = p.professor_id
+    INNER JOIN departments d ON p.department_id = d.department_id
+    ORDER BY s.name
+    """)
+    
+    results = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in results]
 
-    conn.commit()
-    print("Student deleted.")
+def get_courses_with_professors():
+    """JOIN between courses and professors through course_assignments"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+    SELECT 
+        c.course_id,
+        c.course_name,
+        c.start_date,
+        c.end_date,
+        p.professor_id,
+        p.name AS professor_name,
+        p.email AS professor_email,
+        ca.semester,
+        ca.year,
+        d.department_name
+    FROM courses c
+    LEFT JOIN course_assignments ca ON c.course_id = ca.course_id
+    LEFT JOIN professors p ON ca.professor_id = p.professor_id
+    LEFT JOIN departments d ON p.department_id = d.department_id
+    ORDER BY c.course_name
+    """)
+    
+    results = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in results]
 
+def get_professors_with_departments():
+    """JOIN between professors and departments with aggregation"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+    SELECT 
+        d.department_id,
+        d.department_name,
+        d.building,
+        d.budget,
+        d.dean_name,
+        p.professor_id,
+        p.name AS professor_name,
+        p.email,
+        p.hire_date,
+        p.salary,
+        COUNT(DISTINCT ca.course_id) AS courses_teaching,
+        COUNT(DISTINCT a.student_id) AS students_advising
+    FROM departments d
+    INNER JOIN professors p ON d.department_id = p.department_id
+    LEFT JOIN course_assignments ca ON p.professor_id = ca.professor_id
+    LEFT JOIN advising a ON p.professor_id = a.professor_id
+    GROUP BY p.professor_id
+    ORDER BY d.department_name, p.name
+    """)
+    
+    results = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in results]
 
-# ---------------------------------------------------
-# Menu system
-# ---------------------------------------------------
-def menu():
-    while True:
-        print("\nStudent Records System")
-        print("1. Add Student")
-        print("2. Add Course")
-        print("3. Enroll Student")
-        print("4. View Students")
-        print("5. View Courses")
-        print("6. View Enrollments")
-        print("7. Update Grade")
-        print("8. Delete Student")
-        print("9. Exit")
+def get_department_statistics():
+    """JOIN across departments, professors, students, and courses"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+    SELECT 
+        d.department_id,
+        d.department_name,
+        d.building,
+        d.budget,
+        COUNT(DISTINCT p.professor_id) AS professor_count,
+        COUNT(DISTINCT s.student_id) AS student_count,
+        COUNT(DISTINCT c.course_id) AS course_count,
+        AVG(p.salary) AS avg_professor_salary,
+        AVG(e.grade) AS avg_student_grade
+    FROM departments d
+    LEFT JOIN professors p ON d.department_id = p.department_id
+    LEFT JOIN course_assignments ca ON p.professor_id = ca.professor_id
+    LEFT JOIN courses c ON ca.course_id = c.course_id
+    LEFT JOIN enrollments e ON c.course_id = e.course_id
+    LEFT JOIN students s ON e.student_id = s.student_id AND s.major = d.department_name
+    GROUP BY d.department_id
+    ORDER BY d.department_name
+    """)
+    
+    results = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in results]
 
-        choice = input("Choose an option: ")
+def get_student_full_details(student_id):
+    """Comprehensive JOIN across all tables for a specific student"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Get student basic info with advisor
+    cursor.execute("""
+    SELECT 
+        s.student_id,
+        s.name AS student_name,
+        s.major,
+        s.enrollment_date,
+        s.birth_date,
+        p.professor_id,
+        p.name AS advisor_name,
+        p.email AS advisor_email,
+        d.department_name AS advisor_department,
+        a.start_date AS advising_start,
+        a.status AS advising_status
+    FROM students s
+    LEFT JOIN advising a ON s.student_id = a.student_id AND a.status = 'Active'
+    LEFT JOIN professors p ON a.professor_id = p.professor_id
+    LEFT JOIN departments d ON p.department_id = d.department_id
+    WHERE s.student_id = ?
+    """, (student_id,))
+    
+    student_info = cursor.fetchone()
+    
+    # Get student's enrolled courses with professor info
+    cursor.execute("""
+    SELECT 
+        c.course_id,
+        c.course_name,
+        c.start_date,
+        c.end_date,
+        e.grade,
+        e.enrollment_date,
+        p.professor_id,
+        p.name AS professor_name,
+        p.email AS professor_email
+    FROM enrollments e
+    INNER JOIN courses c ON e.course_id = c.course_id
+    LEFT JOIN course_assignments ca ON c.course_id = ca.course_id
+    LEFT JOIN professors p ON ca.professor_id = p.professor_id
+    WHERE e.student_id = ?
+    ORDER BY c.course_name
+    """, (student_id,))
+    
+    courses = cursor.fetchall()
+    conn.close()
+    
+    return {
+        "student_info": dict(student_info) if student_info else None,
+        "enrolled_courses": [dict(course) for course in courses]
+    }
 
-        if choice == "1":
-            add_student()
-        elif choice == "2":
-            add_course()
-        elif choice == "3":
-            enroll_student()
-        elif choice == "4":
-            view_students()
-        elif choice == "5":
-            view_courses()
-        elif choice == "6":
-            view_enrollments()
-        elif choice == "7":
-            update_grade()
-        elif choice == "8":
-            delete_student()
-        elif choice == "9":
-            break
-        else:
-            print("Invalid option.")
+def get_professor_workload(professor_id):
+    """JOIN to get professor's teaching load and advising load"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+    SELECT 
+        p.professor_id,
+        p.name AS professor_name,
+        p.email,
+        p.hire_date,
+        p.salary,
+        d.department_name,
+        COUNT(DISTINCT ca.course_id) AS courses_teaching,
+        COUNT(DISTINCT ca.assignment_id) AS assignments_count,
+        COUNT(DISTINCT a.student_id) AS students_advising,
+        GROUP_CONCAT(DISTINCT c.course_name) AS courses_list,
+        GROUP_CONCAT(DISTINCT s.name) AS advisees_list
+    FROM professors p
+    INNER JOIN departments d ON p.department_id = d.department_id
+    LEFT JOIN course_assignments ca ON p.professor_id = ca.professor_id
+    LEFT JOIN courses c ON ca.course_id = c.course_id
+    LEFT JOIN advising a ON p.professor_id = a.professor_id AND a.status = 'Active'
+    LEFT JOIN students s ON a.student_id = s.student_id
+    WHERE p.professor_id = ?
+    GROUP BY p.professor_id
+    """, (professor_id,))
+    
+    result = cursor.fetchone()
+    conn.close()
+    return dict(result) if result else None
 
-
-# ---------------------------------------------------
-# Run program
-# ---------------------------------------------------
-create_tables()
-menu()
-
-conn.close()
+def get_department_courses_with_professors(department_id):
+    """JOIN to get all courses in a department with assigned professors"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+    SELECT 
+        c.course_id,
+        c.course_name,
+        c.start_date,
+        c.end_date,
+        p.professor_id,
+        p.name AS professor_name,
+        p.email AS professor_email,
+        ca.semester,
+        ca.year
+    FROM courses c
+    LEFT JOIN course_assignments ca ON c.course_id = ca.course_id
+    LEFT JOIN professors p ON ca.professor_id = p.professor_id
+    WHERE p.department_id = ? OR p.department_id IS NULL
+    ORDER BY c.course_name
+    """, (department_id,))
+    
+    results = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in results]

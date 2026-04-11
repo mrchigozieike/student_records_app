@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+    <h2>📝 Enrollment Management</h2>
+    <a href="/enroll_student" class="btn">+ New Enrollment</a>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Student</th>
+            <th>Course</th>
+            <th>Grade</th>
+            <th>Enrollment Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for enrollment in enrollments %}
+        <tr>
+            <td>{{ enrollment.enrollment_id }}</td>
+            <td>{{ enrollment.student_name }}</td>
+            <td>{{ enrollment.course_name }}</td>
+            <td>{{ enrollment.grade or 'N/A' }}</td>
+            <td>{{ enrollment.enrollment_date }}</td>
+            <td>
+                <a href="/update_grade/{{ enrollment.enrollment_id }}" class="btn" style="padding: 5px 10px;">Update Grade</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
